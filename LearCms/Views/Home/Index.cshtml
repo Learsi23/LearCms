@@ -1,0 +1,26 @@
+﻿
+@model IEnumerable<ProductEntity>
+
+
+
+<h1>Productos disponibles</h1>
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">@product.Name</h5>
+                    <p class="card-text">@product.Description</p>
+                    <p class="card-text"><strong>Precio: @product.Price.ToString("C")</strong></p>
+                    <form asp-controller="Cart" asp-action="AddToCart" method="post">
+                        <input type="hidden" name="productId" value="@product.ProductId" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <button type="submit" class="btn btn-primary">Añadir al Carrito</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
