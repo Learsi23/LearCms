@@ -15,6 +15,17 @@
         {
             <div class="col-md-4">
                 <div class="card mb-4">
+                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                    {
+                        <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name" style="height: 200px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                 
+                        <img class="card-img-top" src="/images/placeholder.jpg" alt="No Image" style="height: 200px; object-fit: cover;" />
+                    }
+                   
+
                     <div class="card-body">
                         <h5 class="card-title">@product.Name</h5>
                         <p class="card-text">@product.Description</p>

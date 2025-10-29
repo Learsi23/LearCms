@@ -1,10 +1,13 @@
 using LearCms.Contexts;
+using LearCms.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configurar servicios (Dependency Injection)
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IFileService, FileService> ();
 
 // Agregar DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

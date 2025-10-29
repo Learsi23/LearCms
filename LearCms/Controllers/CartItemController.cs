@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LearCms.Contexts;
 using LearCms.Entities;
-using Microsoft.AspNetCore.Http; // Necesario para usar extensiones de Session
+using Microsoft.AspNetCore.Http; 
 
 namespace LearCms.Controllers
 {

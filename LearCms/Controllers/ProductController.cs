@@ -1,22 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using LearCms.Contexts;
+using LearCms.Entities;
+using LearCms.Services;
+using LearCms.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using LearCms.Contexts;
-using LearCms.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LearCms.Controllers
 {
     public class ProductController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IFileService _fileService; // 🆕 Inyectar el servicio
 
-        public ProductController(ApplicationDbContext context)
+        public ProductController(ApplicationDbContext context, IFileService fileService)
         {
             _context = context;
+            _fileService = fileService; // 🆕 Asignar el servicio
         }
 
         // GET: Product
@@ -49,21 +53,35 @@ namespace LearCms.Controllers
             return View();
         }
 
-        // POST: Product/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Name,Description,Price,Stock")] ProductEntity productEntity)
+        public async Task<IActionResult> Create(ProductCreateViewModel viewModel)
         {
+            // Nota: No se usa [Bind] porque estamos usando un ViewModel
             if (ModelState.IsValid)
             {
-                productEntity.ProductId = Guid.NewGuid();
+                var productEntity = new ProductEntity
+                {
+                    ProductId = Guid.NewGuid(),
+                    Name = viewModel.Name,
+                    Description = viewModel.Description,
+                    Price = viewModel.Price,
+                    Stock = viewModel.Stock
+                    // ImageUrl se asigna a continuación
+                };
+
+                if (viewModel.ImageFile != null)
+                {
+                    // 🚨 CLAVE: Llama al servicio para guardar el archivo
+                    productEntity.ImageUrl = await _fileService.SaveFileAsync(viewModel.ImageFile, "images/productos");
+                }
+
                 _context.Add(productEntity);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(productEntity);
+            // Si falla, volvemos a la vista (usando el ViewModel)
+            return View(viewModel);
         }
 
         // GET: Product/Edit/5
