@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LearCms.Models
+namespace LearCms.DTOs
 {
     public class CartItemDto
     {

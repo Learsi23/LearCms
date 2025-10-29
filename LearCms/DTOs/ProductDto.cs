@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LearCms.Models
+namespace LearCms.DTOs
 {
     public class ProductDto
     {
@@ -13,5 +13,7 @@ namespace LearCms.Models
         public decimal Price { get; set; }
 
         public int Stock { get; set; }
+
+        public string? ImageUrl { get; set; }
     }
 }
