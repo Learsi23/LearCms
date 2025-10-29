@@ -11,7 +11,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
 // Agregar soporte de sesión
-builder.Services.AddSession();
+builder.Services.AddSession(o =>
+{
+    o.IdleTimeout = TimeSpan.FromMinutes(30);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 

@@ -1,26 +1,74 @@
-﻿
-@model IEnumerable<ProductEntity>
+﻿@model IEnumerable<ProductEntity>
 
-
+@{
+    ViewData["Title"] = "Tienda";
+}
 
 <h1>Productos disponibles</h1>
 
-<div class="row">
-    @foreach (var product in Model)
-    {
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">@product.Name</h5>
-                    <p class="card-text">@product.Description</p>
-                    <p class="card-text"><strong>Precio: @product.Price.ToString("C")</strong></p>
-                    <form asp-controller="Cart" asp-action="AddToCart" method="post">
-                        <input type="hidden" name="productId" value="@product.ProductId" />
-                        <input type="hidden" name="quantity" value="1" />
-                        <button type="submit" class="btn btn-primary">Añadir al Carrito</button>
-                    </form>
+<div id="status-message"></div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var product in Model)
+        {
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text">@product.Description</p>
+                        <p class="card-text"><strong>Precio: @product.Price.ToString("C")</strong></p>
+                        <form class="add-to-cart-form" data-product-id="@product.ProductId">
+                            <input type="hidden" name="quantity" value="1" />
+                            <button type="submit" class="btn btn-primary">Añadir al Carrito</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info" role="alert">
+        No hay productos disponibles en este momento.
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.add-to-cart-form').submit(function (e) {
+                e.preventDefault(); // Evita el envío tradicional del formulario
+
+                var form = $(this);
+                var productId = form.data('product-id');
+                var quantity = form.find('input[name="quantity"]').val();
+
+                $.ajax({
+                    url: '@Url.Action("AddToCart", "CartItem")',
+                    type: 'POST',
+                    data: { productId: productId, quantity: quantity },
+                    success: function (response) {
+                        if (response.success) {
+                            // Llama a la nueva acción CartCount en CartItemController
+                            $.get('@Url.Action("CartCount", "CartItem")', function (result) {
+                                // 🚨 CAMBIO CLAVE: Se usa el ID específico para reemplazar el contenido
+                                $('#cart-item-container').html(result);
+                            });
+
+                            // Mostrar mensaje de éxito
+                            $('#status-message').html('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                response.message + ' <a href="@Url.Action("Index", "CartItem")" class="alert-link">Ver carrito</a>.' +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+                        }
+                    },
+                    error: function () {
+                        $('#status-message').html('<div class="alert alert-danger" role="alert">Error al añadir el producto.</div>');
+                    }
+                });
+            });
+        });
+    </script>
+}

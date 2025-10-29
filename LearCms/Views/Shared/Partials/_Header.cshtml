@@ -12,10 +12,11 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="/Product" asp-action="Index">Product</a>
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Product" asp-action="Index">Product</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="/CartItem" asp-action="Index">Cart</a>
+                    <li class="nav-item" **id="cart-item-container" **>
+                        @* Invoca el View Component aquí *@
+                        @await Component.InvokeAsync("Cart")
                     </li>
                 </ul>
             </div>

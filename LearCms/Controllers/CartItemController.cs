@@ -7,12 +7,15 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LearCms.Contexts;
 using LearCms.Entities;
+using Microsoft.AspNetCore.Http; // Necesario para usar extensiones de Session
 
 namespace LearCms.Controllers
 {
     public class CartItemController : Controller
     {
         private readonly ApplicationDbContext _context;
+        // 🚨 CAMBIO: Se añade la constante para la clave de sesión, necesaria para GetSessionId.
+        private const string CartSessionId = "CartSessionId";
 
         public CartItemController(ApplicationDbContext context)
         {
@@ -22,9 +25,78 @@ namespace LearCms.Controllers
         // GET: CartItem
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.CartItems.Include(c => c.Product);
-            return View(await applicationDbContext.ToListAsync());
+            var sessionId = GetSessionId();
+            var cartItems = await _context.CartItems
+                .Include(c => c.Product)
+                .Where(c => c.SessionId == sessionId)
+                .ToListAsync();
+            return View(cartItems);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> AddToCart(Guid productId, int quantity)
+        {
+            // La lógica de adición/actualización ya estaba correcta, se mantiene.
+
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            // Asegura que la cantidad no sea negativa
+            if (quantity <= 0)
+            {
+                return Json(new { success = false, message = "La cantidad debe ser mayor que cero." });
+            }
+
+            var sessionId = GetSessionId();
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.SessionId == sessionId && c.ProductId == productId);
+
+            if (cartItem == null)
+            {
+                // Producto nuevo en el carrito
+                _context.CartItems.Add(new CartItemEntity
+                {
+                    CartItemId = Guid.NewGuid(),
+                    SessionId = sessionId,
+                    ProductId = productId,
+                    Quantity = quantity
+                });
+            }
+            else
+            {
+                // Producto ya existente, se actualiza la cantidad
+                cartItem.Quantity += quantity;
+                _context.Update(cartItem);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = $"Producto '{product.Name}' añadido al carrito." });
+        }
+
+        // 🚨 CAMBIO: Nueva acción para devolver el componente de vista del carrito actualizado.
+        // Utiliza ViewComponentResult para renderizar directamente el componente.
+        [HttpGet]
+        public IActionResult CartCount()
+        {
+            // Invoca y renderiza el CartViewComponent.
+            return ViewComponent("Cart");
+        }
+
+        private string GetSessionId()
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString(CartSessionId)))
+            {
+                HttpContext.Session.SetString(CartSessionId, Guid.NewGuid().ToString());
+            }
+            return HttpContext.Session.GetString(CartSessionId);
+        }
+
+        // GET: CartItem/Details/5
+        // ... (resto de acciones sin cambios)
 
         // GET: CartItem/Details/5
         public async Task<IActionResult> Details(Guid? id)
