@@ -1,76 +1,107 @@
 ﻿@model LearCms.ViewModels.ProductEditViewModel
-
 @{
     ViewData["Title"] = "Edit";
 }
+<div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-4xl font-bold text-white text-center mb-2 drop-shadow-lg">Edit Product</h1>
 
-<h1>Editar Producto</h1>
+    <div class="relative bg-slate-700 rounded-xl shadow-xl p-8 mb-2 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1"></div>
+        @* <h4 class="text-white/90 text-center text-lg">@Model.Name</h4> *@
 
-<h4>@Model.Name</h4>
-<hr />
-<div class="row">
-    <div class="col-md-6">
-        @* CLAVE: enctype="multipart/form-data" para subir el archivo *@
-        <form asp-action="Edit" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Edit" enctype="multipart/form-data" id="editForm" class="space-y-6">
+            <div asp-validation-summary="ModelOnly" class="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm"></div>
 
-            @* Campos Ocultos para mantener ID y URL existente *@
             <input type="hidden" asp-for="ProductId" />
             <input type="hidden" asp-for="ExistingImageUrl" />
 
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+            <!-- Product Name -->
+            <div>
+                <label asp-for="Name" class="block font-semibold text-gray-700 mb-1">Product Name</label>
+                <input asp-for="Name"
+                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all" />
+                <span asp-validation-for="Name" class="text-red-600 text-sm mt-1 block"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
+            <!-- Description -->
+            <div>
+                <label asp-for="Description" class="block font-semibold text-gray-700 mb-1">Description</label>
+                <input asp-for="Description"
+                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all" />
+                <span asp-validation-for="Description" class="text-red-600 text-sm mt-1 block"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
+            <!-- Price -->
+            <div>
+                <label asp-for="Price" class="block font-semibold text-gray-700 mb-1">Price</label>
+                <input asp-for="Price"
+                       type="number" step="0.01"
+                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all" />
+                <span asp-validation-for="Price" class="text-red-600 text-sm mt-1 block"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Stock" class="control-label"></label>
-                <input asp-for="Stock" class="form-control" />
-                <span asp-validation-for="Stock" class="text-danger"></span>
+            <!-- Stock -->
+            <div>
+                <label asp-for="Stock" class="block font-semibold text-gray-700 mb-1">Stock</label>
+                <input asp-for="Stock"
+                       type="number"
+                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all" />
+                <span asp-validation-for="Stock" class="text-red-600 text-sm mt-1 block"></span>
             </div>
 
-            <hr />
+            <hr class="border-gray-200 my-4" />
 
-            <div class="form-group">
-                <label asp-for="NewImageFile" class="control-label">Reemplazar Imagen</label>
-                <input asp-for="NewImageFile" type="file" class="form-control" />
-                <span asp-validation-for="NewImageFile" class="text-danger"></span>
+            <!-- Image upload -->
+            <div>
+                <label asp-for="NewImageFile" class="block font-semibold text-gray-700 mb-1">Replace Image</label>
+                <input asp-for="NewImageFile" type="file"
+                       accept="image/*"
+                       class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-gray-700 bg-white file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-sky-600 file:text-white hover:file:bg-sky-700 transition-all" />
+                <span asp-validation-for="NewImageFile" class="text-red-600 text-sm mt-1 block"></span>
+                <small class="text-gray-300 text-sm block mt-1">You can upload a new image (JPG, PNG, GIF) — max. 5MB</small>
             </div>
 
+            <!-- Current image -->
             @if (!string.IsNullOrEmpty(Model.ExistingImageUrl))
             {
-                <div class="mt-3">
-                    <h6>Imagen Actual:</h6>
-                    <img src="@Model.ExistingImageUrl" alt="Imagen actual" style="max-width: 200px; height: auto;" />
+                <div class="text-center mt-6">
+                    <h6 class="text-gray-700 font-semibold mb-3">Current Image:</h6>
+                    <img src="@Model.ExistingImageUrl"
+                         alt="Current image"
+                         class="max-w-xs mx-auto rounded-lg shadow-md transition-transform duration-200 hover:scale-105" />
                 </div>
             }
 
-            <div class="form-group mt-4">
-                <input type="submit" value="Guardar Cambios" class="btn btn-primary" />
+            <!-- Submit -->
+            <div class="pt-4">
+                <button type="submit"
+                        class="relative w-full bg-gradient-to-r from-sky-500 to-blue-700 text-white font-semibold py-3 rounded-lg shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1 active:translate-y-1 overflow-hidden">
+                    <span>Save Changes</span>
+                </button>
             </div>
         </form>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    <div class="text-center">
+        <a asp-action="Index"
+           class="inline-flex items-center gap-2 text-white font-medium px-5 py-3 rounded-lg bg-slate-700 backdrop-blur-md shadow-md transition-all hover:bg-slate-600/30 hover:-translate-x-1 hover:scale-105">
+            <span>←</span> Back to list
+        </a>
+    </div>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('editForm');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            form.addEventListener('submit', function() {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+            });
+        });
+    </script>
 }

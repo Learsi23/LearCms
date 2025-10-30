@@ -1,38 +1,36 @@
-﻿@model IEnumerable<ProductEntity>
-
+﻿@using LearCms.DTOs
+@model IEnumerable<LearCms.DTOs.ProductDto>
 @{
-    ViewData["Title"] = "Tienda";
+    ViewData["Title"] = "Store";
 }
-
-<h1>Productos disponibles</h1>
-
+<h1 class="text-6xl font-bold mb-12">Available Products</h1>
 <div id="status-message"></div>
-
 @if (Model != null && Model.Any())
 {
-    <div class="row">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @foreach (var product in Model)
         {
-            <div class="col-md-4">
-                <div class="card mb-4">
+            <div class="product-card">
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                     @if (!string.IsNullOrEmpty(product.ImageUrl))
                     {
-                        <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name" style="height: 200px; object-fit: cover;" />
+                        <img class="w-full h-52 object-cover" src="@product.ImageUrl" alt="@product.Name" />
                     }
                     else
                     {
-                 
-                        <img class="card-img-top" src="/images/placeholder.jpg" alt="No Image" style="height: 200px; object-fit: cover;" />
+                        <img class="w-full h-52 object-cover bg-gray-200" src="/images/placeholder.jpg" alt="No Image" />
                     }
-                   
-
-                    <div class="card-body">
-                        <h5 class="card-title">@product.Name</h5>
-                        <p class="card-text">@product.Description</p>
-                        <p class="card-text"><strong>Precio: @product.Price.ToString("C")</strong></p>
+                    <div class="p-5">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-2">@product.Name</h2>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">@product.Description</p>
+                        <p class="text-lg font-bold text-indigo-600 mb-4">
+                            <strong>Price: @product.Price.ToString("C")</strong>
+                        </p>
                         <form class="add-to-cart-form" data-product-id="@product.ProductId">
                             <input type="hidden" name="quantity" value="1" />
-                            <button type="submit" class="btn btn-primary">Añadir al Carrito</button>
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150">
+                                Add to Cart
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -42,41 +40,81 @@
 }
 else
 {
-    <div class="alert alert-info" role="alert">
-        No hay productos disponibles en este momento.
+    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
+        <p class="font-bold">Information</p>
+        <p>There are no products available at the moment.</p>
     </div>
 }
-
+<div id="confirmation-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full transform transition-all">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Product Added!</h3>
+            <div class="mt-2">
+                <p class="text-sm text-gray-500" id="modal-message">The product has been successfully added to your cart.</p>
+            </div>
+        </div>
+        <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+            <a href="@Url.Action("Index", "CartItem")" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                Go to Cart
+            </a>
+            <button id="close-modal-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                Continue Shopping
+            </button>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         $(document).ready(function () {
+            // Function to show the modal
+            function showModal(message) {
+                $('#modal-message').text(message);
+                $('#confirmation-modal').removeClass('hidden').addClass('flex');
+            }
+            // Function to hide the modal
+            function hideModal() {
+                $('#confirmation-modal').removeClass('flex').addClass('hidden');
+            }
+            // Hide modal when clicking the "Continue Shopping" button
+            $('#close-modal-btn').on('click', hideModal);
+            // Hide modal when clicking the dark background
+            $('#confirmation-modal').on('click', function(e) {
+                // Only hide if the click is directly on the background (the main div)
+                if (e.target.id === 'confirmation-modal') {
+                    hideModal();
+                }
+            });
             $('.add-to-cart-form').submit(function (e) {
-                e.preventDefault(); // Evita el envío tradicional del formulario
-
+                e.preventDefault(); // Prevents the traditional form submission
                 var form = $(this);
                 var productId = form.data('product-id');
                 var quantity = form.find('input[name="quantity"]').val();
-
+                // Show a loader or disable the button here if desired
                 $.ajax({
                     url: '@Url.Action("AddToCart", "CartItem")',
                     type: 'POST',
                     data: { productId: productId, quantity: quantity },
                     success: function (response) {
+                        // Hide the loader/enable the button
                         if (response.success) {
-                            // Llama a la nueva acción CartCount en CartItemController
+                            // 1. Update the cart counter (assuming it's in the navigation bar)
                             $.get('@Url.Action("CartCount", "CartItem")', function (result) {
-                                // 🚨 CAMBIO CLAVE: Se usa el ID específico para reemplazar el contenido
+                                // 🚨 KEY CHANGE: Using the specific ID to replace the content
                                 $('#cart-item-container').html(result);
                             });
-
-                            // Mostrar mensaje de éxito
-                            $('#status-message').html('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-                                response.message + ' <a href="@Url.Action("Index", "CartItem")" class="alert-link">Ver carrito</a>.' +
-                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+                            // 2. Show the success modal
+                            showModal(response.message || 'The product has been successfully added to your cart.');
+                        } else {
+                             // If not successful but returns an error message
+                            $('#status-message').html('<div class="alert alert-danger" role="alert">' + (response.message || 'Error adding the product.') + '</div>');
                         }
                     },
                     error: function () {
-                        $('#status-message').html('<div class="alert alert-danger" role="alert">Error al añadir el producto.</div>');
+                        // Hide the loader/enable the button
+                        $('#status-message').html('<div class="alert alert-danger" role="alert">Communication error. Could not add the product.</div>');
                     }
                 });
             });

@@ -4,50 +4,85 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Product Management</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Stock)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Stock)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ProductId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <!-- Botón Create New: no se toca -->
+    <div class="flex justify-end items-center mb-4">
+        <a asp-action="Create" class="bg-slate-800 text-white px-4 py-2 rounded-lg">
+            Create New
+        </a>
+    </div>
+
+    <!-- Tabla -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-100 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                        @Html.DisplayNameFor(model => model.Name)
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                        @Html.DisplayNameFor(model => model.Description)
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                        @Html.DisplayNameFor(model => model.Price)
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                        @Html.DisplayNameFor(model => model.Stock)
+                    </th>
+                    <th class="px-6 py-3">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @foreach (var item in Model)
+                {
+                    var stockClass = item.Stock > 20 ? "bg-green-100 text-green-700 border-green-300" :
+                    item.Stock > 5 ? "bg-yellow-100 text-yellow-700 border-yellow-300" :
+                    "bg-red-100 text-red-700 border-red-300";
+                    <tr>
+                        <td class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-200">
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-300 max-w-xs truncate">
+                            @Html.DisplayFor(modelItem => item.Description)
+                        </td>
+                        <td class="px-6 py-4 font-bold text-green-600 dark:text-green-400">
+                            $@Html.DisplayFor(modelItem => item.Price)
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold border @stockClass">
+                                @Html.DisplayFor(modelItem => item.Stock)
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-2">
+                                <a asp-action="Edit" asp-route-id="@item.ProductId"
+                                   class="px-3 py-1 rounded-md border text-blue-600 border-blue-200 hover:bg-blue-600 hover:text-white transition">
+                                    Edit
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.ProductId"
+                                   class="px-3 py-1 rounded-md border text-gray-600 border-gray-200 hover:bg-gray-600 hover:text-white transition">
+                                    Details
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.ProductId"
+                                   class="px-3 py-1 rounded-md border text-red-600 border-red-200 hover:bg-red-600 hover:text-white transition">
+                                    Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @* Mensaje cuando no hay datos *@
+        @if (!Model.Any())
+        {
+            <div class="text-center py-10 text-gray-500 dark:text-gray-300 italic">
+                No products available.
+            </div>
+        }
+    </div>
+</div>

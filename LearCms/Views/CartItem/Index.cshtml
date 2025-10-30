@@ -1,47 +1,125 @@
 ﻿@model IEnumerable<CartItemEntity>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Your Shopping Cart";
 }
 
-<h1>Index</h1>
+<div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+        Your Shopping Cart 🛒
+    </h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.SessionId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Product)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Quantity)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.SessionId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product!.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Quantity)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CartItemId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CartItemId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CartItemId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    @if (!Model.Any())
+    {
+        <div class="text-center text-gray-600 dark:text-gray-300 py-10 text-lg">
+            Your cart is empty.
+            <br />
+            <a asp-controller="Products" asp-action="Index"
+               class="inline-block mt-4 px-5 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                Continue Shopping
+            </a>
+        </div>
+    }
+    else
+    {
+        decimal total = 0;
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 shadow-lg rounded-lg overflow-hidden">
+                <thead class="bg-gray-100 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                            Product
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                            Quantity
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                            Price
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-200 uppercase tracking-wider">
+                            Subtotal
+                        </th>
+                        <th class="px-6 py-3 text-center"></th>
+                    </tr>
+                </thead>
+
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach (var item in Model)
+                    {
+                        var price = item.Product?.Price ?? 0;
+                        var subtotal = price * item.Quantity;
+                        total += subtotal;
+
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium">
+                                @item.Product?.Name
+                            </td>
+
+                            <!-- Update Quantity -->
+                            <td class="px-6 py-4 text-center">
+                                <form asp-action="UpdateQuantity" method="post"
+                                      class="flex items-center justify-center gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                    <input type="number" name="quantity"
+                                           value="@item.Quantity"
+                                           min="1"
+                                           class="w-16 text-center border rounded-md dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 transition" />
+                                    <button type="submit"
+                                            class="px-2 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition">
+                                        Update
+                                    </button>
+                                </form>
+                            </td>
+
+                            <!-- Price -->
+                            <td class="px-6 py-4 text-center text-gray-700 dark:text-gray-200">
+                                $@price:F2
+                            </td>
+
+                            <!-- Subtotal -->
+                            <td class="px-6 py-4 text-center text-gray-900 dark:text-gray-100 font-semibold">
+                                $@subtotal:F2
+                            </td>
+
+                            <!-- Remove Button -->
+                            <td class="px-6 py-4 text-center">
+                                <form asp-action="Remove" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium transition">
+                                        Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+
+                    <!-- Total Row -->
+                    <tr class="bg-gray-100 dark:bg-gray-700 font-bold">
+                        <td colspan="3" class="text-right px-6 py-4 text-gray-800 dark:text-gray-200">Total:</td>
+                        <td class="text-center px-6 py-4 text-gray-900 dark:text-gray-100">$@total:F2</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-wrap justify-between items-center mt-6">
+            <form asp-action="Clear" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                    Clear Cart
+                </button>
+            </form>
+
+            <a asp-controller="Checkout" asp-action="Index"
+               class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition">
+                Proceed to Checkout →
+            </a>
+        </div>
+    }
+</div>

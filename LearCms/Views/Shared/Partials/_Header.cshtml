@@ -1,24 +1,33 @@
 ﻿<header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">LearCms</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Product" asp-action="Index">Product</a>
-                    </li>
-                    <li class="nav-item" **id="cart-item-container" **>
-                        @* Invoca el View Component aquí *@
-                        @await Component.InvokeAsync("Cart")
-                    </li>
-                </ul>
+    <nav class="bg-white border-b shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a class="text-xl font-bold text-gray-800" asp-area="" asp-controller="Home" asp-action="Index">
+                    LearCms
+                </a>
+
+                <button class="sm:hidden p-2 text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="sr-only">Toggle navigation</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
+                <div class="hidden sm:block sm:ml-6" id="navbarSupportedContent">
+                    <ul class="flex space-x-4">
+                        <li class="nav-item">
+                            <a class="text-gray-600 hover:bg-gray-50 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="text-gray-600 hover:bg-gray-50 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium" asp-area="" asp-controller="Product" asp-action="Index">Product</a>
+                        </li>
+                        <li class="nav-item" id="cart-item-container">
+                            @* Invoca el View Component aquí *@
+                            @await Component.InvokeAsync("Cart")
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>

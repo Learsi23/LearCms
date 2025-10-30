@@ -1,17 +1,15 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LearCms.Contexts;
 using LearCms.Entities;
-using Microsoft.AspNetCore.Http; 
+using Microsoft.AspNetCore.Http;
 
 namespace LearCms.Controllers
 {
     public class CartItemController : Controller
     {
         private readonly ApplicationDbContext _context;
-        // 🚨 CAMBIO: Se añade la constante para la clave de sesión, necesaria para GetSessionId.
         private const string CartSessionId = "CartSessionId";
 
         public CartItemController(ApplicationDbContext context)
@@ -19,33 +17,33 @@ namespace LearCms.Controllers
             _context = context;
         }
 
-        // GET: CartItem
+        // ================================
+        // 🛒 VIEW: Mostrar carrito actual
+        // ================================
         public async Task<IActionResult> Index()
         {
             var sessionId = GetSessionId();
+
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
                 .Where(c => c.SessionId == sessionId)
                 .ToListAsync();
+
             return View(cartItems);
         }
 
+        // ===========================================
+        // ➕ ADD: Añadir producto al carrito
+        // ===========================================
         [HttpPost]
         public async Task<IActionResult> AddToCart(Guid productId, int quantity)
         {
-            // La lógica de adición/actualización ya estaba correcta, se mantiene.
+            if (quantity <= 0)
+                return Json(new { success = false, message = "Quantity must be greater than zero." });
 
             var product = await _context.Products.FindAsync(productId);
             if (product == null)
-            {
-                return NotFound();
-            }
-
-            // Asegura que la cantidad no sea negativa
-            if (quantity <= 0)
-            {
-                return Json(new { success = false, message = "La cantidad debe ser mayor que cero." });
-            }
+                return Json(new { success = false, message = "Product not found." });
 
             var sessionId = GetSessionId();
             var cartItem = await _context.CartItems
@@ -53,182 +51,99 @@ namespace LearCms.Controllers
 
             if (cartItem == null)
             {
-                // Producto nuevo en el carrito
-                _context.CartItems.Add(new CartItemEntity
+                cartItem = new CartItemEntity
                 {
                     CartItemId = Guid.NewGuid(),
                     SessionId = sessionId,
                     ProductId = productId,
                     Quantity = quantity
-                });
+                };
+                _context.CartItems.Add(cartItem);
             }
             else
             {
-                // Producto ya existente, se actualiza la cantidad
                 cartItem.Quantity += quantity;
                 _context.Update(cartItem);
             }
 
             await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = $"Producto '{product.Name}' añadido al carrito." });
+            return Json(new { success = true, message = $"Added {quantity} x {product.Name} to cart." });
         }
 
-        // 🚨 CAMBIO: Nueva acción para devolver el componente de vista del carrito actualizado.
-        // Utiliza ViewComponentResult para renderizar directamente el componente.
+        // ===========================================
+        // 🔄 UPDATE: Cambiar cantidad de un ítem
+        // ===========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateQuantity(Guid cartItemId, int quantity)
+        {
+            if (quantity <= 0)
+                return RedirectToAction(nameof(Index));
+
+            var cartItem = await _context.CartItems.FindAsync(cartItemId);
+            if (cartItem == null)
+                return NotFound();
+
+            cartItem.Quantity = quantity;
+            _context.Update(cartItem);
+            await _context.SaveChangesAsync();
+
+            // ✅ Regresar al carrito sin mostrar la vista UpdateQuantity
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ===========================================
+        // ❌ REMOVE: Eliminar producto del carrito
+        // ===========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Remove(Guid cartItemId)
+        {
+            var cartItem = await _context.CartItems.FindAsync(cartItemId);
+            if (cartItem == null)
+                return NotFound();
+
+            _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ===========================================
+        // 🧹 CLEAR: Vaciar carrito completo
+        // ===========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Clear()
+        {
+            var sessionId = GetSessionId();
+
+            var items = _context.CartItems.Where(c => c.SessionId == sessionId);
+            _context.CartItems.RemoveRange(items);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ===========================================
+        // 🧾 CART COUNT: Componente del carrito
+        // ===========================================
         [HttpGet]
         public IActionResult CartCount()
         {
-            // Invoca y renderiza el CartViewComponent.
             return ViewComponent("Cart");
         }
 
+        // ===========================================
+        // ⚙️ MÉTODO PRIVADO: Obtener/crear SessionId
+        // ===========================================
         private string GetSessionId()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString(CartSessionId)))
             {
                 HttpContext.Session.SetString(CartSessionId, Guid.NewGuid().ToString());
             }
-            return HttpContext.Session.GetString(CartSessionId);
-        }
-
-        // GET: CartItem/Details/5
-        // ... (resto de acciones sin cambios)
-
-        // GET: CartItem/Details/5
-        public async Task<IActionResult> Details(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cartItemEntity = await _context.CartItems
-                .Include(c => c.Product)
-                .FirstOrDefaultAsync(m => m.CartItemId == id);
-            if (cartItemEntity == null)
-            {
-                return NotFound();
-            }
-
-            return View(cartItemEntity);
-        }
-
-        // GET: CartItem/Create
-        public IActionResult Create()
-        {
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "Name");
-            return View();
-        }
-
-        // POST: CartItem/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CartItemId,SessionId,ProductId,Quantity")] CartItemEntity cartItemEntity)
-        {
-            if (ModelState.IsValid)
-            {
-                cartItemEntity.CartItemId = Guid.NewGuid();
-                _context.Add(cartItemEntity);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "Name", cartItemEntity.ProductId);
-            return View(cartItemEntity);
-        }
-
-        // GET: CartItem/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cartItemEntity = await _context.CartItems.FindAsync(id);
-            if (cartItemEntity == null)
-            {
-                return NotFound();
-            }
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "Name", cartItemEntity.ProductId);
-            return View(cartItemEntity);
-        }
-
-        // POST: CartItem/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("CartItemId,SessionId,ProductId,Quantity")] CartItemEntity cartItemEntity)
-        {
-            if (id != cartItemEntity.CartItemId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(cartItemEntity);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CartItemEntityExists(cartItemEntity.CartItemId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "Name", cartItemEntity.ProductId);
-            return View(cartItemEntity);
-        }
-
-        // GET: CartItem/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cartItemEntity = await _context.CartItems
-                .Include(c => c.Product)
-                .FirstOrDefaultAsync(m => m.CartItemId == id);
-            if (cartItemEntity == null)
-            {
-                return NotFound();
-            }
-
-            return View(cartItemEntity);
-        }
-
-        // POST: CartItem/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
-        {
-            var cartItemEntity = await _context.CartItems.FindAsync(id);
-            if (cartItemEntity != null)
-            {
-                _context.CartItems.Remove(cartItemEntity);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool CartItemEntityExists(Guid id)
-        {
-            return _context.CartItems.Any(e => e.CartItemId == id);
+            return HttpContext.Session.GetString(CartSessionId)!;
         }
     }
 }
