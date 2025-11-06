@@ -1,0 +1,64 @@
+﻿@using LearCms.ViewModels
+
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="bg-white shadow-2xl rounded-2xl w-full max-w-md p-8">
+        <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">Login</h2>
+
+        <form asp-action="Login" method="post" class="space-y-5">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+            <div>
+                <label asp-for="Email" class="block text-gray-700 font-medium mb-1"></label>
+                <input asp-for="Email" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="Password" class="block text-gray-700 font-medium mb-1"></label>
+                <input asp-for="Password" type="password" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <span asp-validation-for="Password" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <input asp-for="RememberMe" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <label asp-for="RememberMe" class="text-sm text-gray-700">@Html.DisplayNameFor(a => a.RememberMe)</label>
+                </div>
+
+                <a asp-controller="Account" asp-action="VerifyEmail" class="text-sm text-blue-600 hover:underline">
+                    Forgot password?
+                </a>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition">
+                Login
+            </button>
+
+            @* <p class="text-center text-gray-600 text-sm mt-3">
+                Don't have an account?
+                <a asp-controller="Account" asp-action="Register" class="text-blue-600 hover:underline">
+                    Register
+                </a>
+            </p> *@
+
+            <div class="text-center mt-3">
+                <a asp-controller="Home" asp-action="Index" class="text-sm text-gray-500 hover:text-gray-700">
+                    ← Back to Home
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
